@@ -33,7 +33,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("email"),
     )
 
-    # Add default super admin
+    # Add default super admin for dev purpose
     default_password = "admin123"  # You should change this in production
     hashed_password = get_password_hash(default_password)
 

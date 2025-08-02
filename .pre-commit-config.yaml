@@ -30,11 +30,3 @@ repos:
     hooks:
       - id: isort
         args: ["--profile", "black"]
-
-  - repo: local
-    hooks:
-      - id: check-commit-message
-        name: "Check Commit Message"
-        entry: ./commit-msg.sh
-        language: system
-        stages: [commit-msg]

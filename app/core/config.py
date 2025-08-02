@@ -1,39 +1,59 @@
-import os
+from typing import Any, Dict, Optional
 
+from pydantic import EmailStr, PostgresDsn, validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # Database settings
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "admin")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "Password")
-    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "db")
-    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "central_org")
+    # API Settings
+    API_V1_STR: str = "/api/v1"
+    PROJECT_NAME: str = "Organization Management API"
+    VERSION: str = "1.0.0"
+    DEBUG: bool = False
 
-    # JWT settings
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your_secret_key")
-    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+    # Security
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    @property
-    def DATABASE_URL(self) -> str:
-        """Get the database URL for SQLAlchemy."""
-        return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
-            f"{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    # Database
+    POSTGRES_HOST: str
+    POSTGRES_PORT: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+
+    # CORS
+    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+
+    # Super Admin default
+    FIRST_SUPERADMIN_EMAIL: EmailStr
+    FIRST_SUPERADMIN_PASSWORD: str
+
+    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
+    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+        if isinstance(v, str):
+            return v
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",
+            username=values.get("POSTGRES_USER"),
+            password=values.get("POSTGRES_PASSWORD"),
+            host=values.get("POSTGRES_HOST"),
+            port=int(values.get("POSTGRES_PORT", 5432)),
+            path=f"{values.get('POSTGRES_DB', '')}",
         )
 
     class Config:
+        case_sensitive = True
         env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 # Initialize settings
 settings = Settings()
 
 # Export commonly used variables
-DATABASE_URL = settings.DATABASE_URL
+DATABASE_URL = str(settings.SQLALCHEMY_DATABASE_URI)
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES

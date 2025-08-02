@@ -40,6 +40,8 @@ markupsafe==3.0.2
     # via mako
 passlib==1.7.4
     # via -r requirements.in
+psutil==7.0.0
+    # via -r requirements.in
 pyasn1==0.6.1
     # via
     #   python-jose
