@@ -1,0 +1,9 @@
+fastapi
+SQLAlchemy[asyncio]
+uvicorn
+pydantic[email]
+asyncpg
+python-jose
+passlib
+alembic
+pydantic-settings
